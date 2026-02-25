@@ -184,9 +184,10 @@ class PostTrainBenchAdapter:
     def generate_timer_sh(self, env_dir: Path) -> None:
         """Generate timer.sh script that tracks remaining time.
 
-        Uses a sentinel file to record the actual start time on first
-        invocation, so the timer is accurate even if the task is generated
-        long before the agent runs.
+        Uses a sentinel file (.timer_start) to record the start time.
+        When run via run_job.py, the AGENT_START hook (see hooks.py)
+        pre-creates .timer_start with the exact agent-start timestamp
+        before this script is ever called.
         """
         timer_script = f"""#!/bin/bash
 

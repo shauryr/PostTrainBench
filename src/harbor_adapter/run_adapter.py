@@ -13,6 +13,8 @@ Usage:
 
 After generating tasks, run them with Harbor:
     harbor run --path ./tasks/posttrainbench-gsm8k-qwen3-1.7b --agent claude-code --model anthropic/claude-sonnet-4 --env modal
+
+harbor run --path tasks/posttrainbench-gpqamain-qwen3-1.7b --agent claude-code --model anthropic/claude-sonnet-4 --env modal
 """
 
 import argparse

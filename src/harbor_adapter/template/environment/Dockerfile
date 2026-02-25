@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y \
     wget \
     curl \
     build-essential \
+    fuse-overlayfs \
+    fuse3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create python3 symlink
@@ -68,6 +70,12 @@ RUN mkdir -p /opt && \
     git clone --depth=1 https://github.com/UKGovernmentBEIS/inspect_evals.git && \
     cd /opt/inspect_evals && \
     uv pip install --system --no-cache .
+
+# HuggingFace cache: the AGENT_START hook mounts a fuse-overlayfs over the
+# Modal volume at /hf-cache-volume, providing copy-on-write isolation.
+# HF_HOME points to the overlay merged directory.
+ENV HF_HOME=/hf-home
+RUN mkdir -p /hf-home /hf-cache-volume
 
 # Setup workspace
 RUN mkdir -p /home/agent/workspace
