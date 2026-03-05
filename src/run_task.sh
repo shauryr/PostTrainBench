@@ -177,7 +177,7 @@ echo "========================================="
 echo "=== RUNNING CONTAMINATION JUDGE ==="
 echo "========================================="
 
-JUDGE_TASK=$(python src/disallowed_usage_judge/get_judge_prompt.py --benchmark "${BENCHMARK}" --model "${MODEL_TO_TRAIN}")
+JUDGE_TASK=$(python src/disallowed_usage_judge/get_judge_prompt.py --benchmark-id "${EVALUATION_TASK}" --model "${MODEL_TO_TRAIN}")
 
 with_huggingface_overlay apptainer exec \
     --nv \
