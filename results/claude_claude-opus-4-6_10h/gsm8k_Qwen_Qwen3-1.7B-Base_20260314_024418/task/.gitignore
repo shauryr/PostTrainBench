@@ -1,0 +1,8 @@
+final_model/
+*.pt
+*.bin
+*.safetensors
+__pycache__/
+checkpoint-*/
+wandb/
+*.log
