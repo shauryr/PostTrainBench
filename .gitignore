@@ -6,7 +6,10 @@ test*.log
 agents/*/auth.json
 agents/*/oauth_token
 
-.claude 
+.claude
+.claude-flow/
+.swarm/
+.mcp.json
 
 AGENTS.md
 CLAUDE.md
