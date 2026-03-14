@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """SFT training for Qwen3-1.7B-Base on GSM8K math reasoning.
-Uses reasoning_content field to properly align with Qwen3 <think> template."""
+Uses plain content (no <think> tags) to match evaluation few-shot format."""
 
 import os
 import re
@@ -53,11 +53,12 @@ def extract_answer_from_metamath(response):
 
 
 def format_example(question, reasoning, answer):
-    """Format with reasoning_content for proper <think> tag alignment."""
+    """Format without <think> tags - reasoning goes directly in content to match eval few-shot format."""
     user_content = MATH_PROMPT_TEMPLATE.format(prompt=question)
+    assistant_content = f"{reasoning}\n\nANSWER: {answer}"
     return [
         {"role": "user", "content": user_content},
-        {"role": "assistant", "reasoning_content": reasoning, "content": f"ANSWER: {answer}"},
+        {"role": "assistant", "content": assistant_content},
     ]
 
 
@@ -112,9 +113,9 @@ def main():
     print("=" * 60)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, trust_remote_code=True)
-    # Use a proper pad token - don't use EOS as pad
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
+    # Set <|endoftext|> (151643) as pad token to avoid conflict with eos
+    tokenizer.pad_token = "<|endoftext|>"
+    tokenizer.pad_token_id = 151643
     tokenizer.padding_side = "right"
 
     # Load chat template
@@ -206,20 +207,33 @@ def main():
     trainer.save_model(args.output_dir)
     tokenizer.save_pretrained(args.output_dir)
 
-    # Fix generation_config to include <|im_end|> as stop token
+    # Fix configs: set both <|endoftext|> (151643) and <|im_end|> (151645) as EOS tokens
     import json
+    eos_ids = [151643, 151645]
+
+    # Fix generation_config.json
     gen_config_path = os.path.join(args.output_dir, "generation_config.json")
     with open(gen_config_path) as f:
         gen_config = json.load(f)
-    # Add <|im_end|> (151645) as stop token
-    eos_ids = gen_config.get("eos_token_id", [])
-    if isinstance(eos_ids, int):
-        eos_ids = [eos_ids]
-    if 151645 not in eos_ids:
-        eos_ids.append(151645)
     gen_config["eos_token_id"] = eos_ids
     with open(gen_config_path, 'w') as f:
         json.dump(gen_config, f, indent=2)
+
+    # Fix config.json
+    config_path = os.path.join(args.output_dir, "config.json")
+    with open(config_path) as f:
+        config = json.load(f)
+    config["eos_token_id"] = eos_ids
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=2)
+
+    # Fix tokenizer_config.json - set eos_token to <|im_end|>
+    tok_config_path = os.path.join(args.output_dir, "tokenizer_config.json")
+    with open(tok_config_path) as f:
+        tok_config = json.load(f)
+    tok_config["eos_token"] = "<|im_end|>"
+    with open(tok_config_path, 'w') as f:
+        json.dump(tok_config, f, indent=2)
 
     print("Training complete!")
 
