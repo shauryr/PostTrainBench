@@ -24,6 +24,9 @@ GPU_ID="${6:-0}"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
+# Ensure gh knows which repo to target
+gh repo set-default "$(git remote get-url origin | sed 's|.*github.com/||;s|\.git$||')" 2>/dev/null || true
+
 # --- Naming ---
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 MODEL_SHORT=$(echo "$MODEL_TO_TRAIN" | sed 's|.*/||' | tr '[:upper:]' '[:lower:]')
@@ -137,7 +140,7 @@ TASK_EXIT=$?
 # --- Locate results ---
 RESULT_PREFIX_SAFE=$(echo "$MODEL_TO_TRAIN" | tr '/:' '_')
 AGENT_CONFIG_SAFE=$(echo "$AGENT_CONFIG" | tr '/:' '_')
-EVAL_DIR="results/${AGENT}_${AGENT_CONFIG_SAFE}_${NUM_HOURS}h/${EVALUATION_TASK}_${RESULT_PREFIX_SAFE}_${RUN_ID}"
+EVAL_DIR="${REPO_ROOT}/results/${AGENT}_${AGENT_CONFIG_SAFE}_${NUM_HOURS}h/${EVALUATION_TASK}_${RESULT_PREFIX_SAFE}_${RUN_ID}"
 
 echo ""
 echo "=== Committing experiment artifacts ==="

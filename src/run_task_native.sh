@@ -38,7 +38,8 @@ RESULT_PREFIX_SAFE=$(echo "$MODEL_TO_TRAIN" | tr '/:' '_')
 AGENT_CONFIG_SAFE=$(echo "$AGENT_CONFIG" | tr '/:' '_')
 RANDOM_UUID=$(uuidgen)
 
-export EVAL_DIR="${POST_TRAIN_BENCH_RESULTS_DIR}/${AGENT}_${AGENT_CONFIG_SAFE}_${NUM_HOURS}h${POST_TRAIN_BENCH_EXPERIMENT_NAME}/${EVALUATION_TASK}_${RESULT_PREFIX_SAFE}_${CLUSTER_ID}"
+# Use absolute path so it works after cd into job directory
+export EVAL_DIR="${REPO_ROOT}/${POST_TRAIN_BENCH_RESULTS_DIR}/${AGENT}_${AGENT_CONFIG_SAFE}_${NUM_HOURS}h${POST_TRAIN_BENCH_EXPERIMENT_NAME}/${EVALUATION_TASK}_${RESULT_PREFIX_SAFE}_${CLUSTER_ID}"
 
 mkdir -p "${EVAL_DIR}"
 
@@ -171,7 +172,7 @@ echo "=== TASK COMPLETE, PARSING AGENT TRACE ==="
 echo "============================================"
 
 # Parse agent trace into human-readable format
-TRACE_PARSER="agents/${AGENT}/human_readable_trace.py"
+TRACE_PARSER="${REPO_ROOT}/agents/${AGENT}/human_readable_trace.py"
 if [ -f "$TRACE_PARSER" ]; then
     python "$TRACE_PARSER" "${SOLVE_OUT}" -o "${EVAL_DIR}/solve_parsed.txt"
     cp "${EVAL_DIR}/solve_parsed.txt" "${JOB_DIR}/solve_parsed.txt"
