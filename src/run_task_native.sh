@@ -98,6 +98,14 @@ echo "$PROMPT" > "${EVAL_DIR}/prompt.txt"
 
 bash src/utils/create_timer.sh "$NUM_HOURS" "${JOB_DIR}/task/timer.sh"
 
+# Auto-detect OAuth token vs API key for Claude
+# OAuth tokens start with sk-ant-oat, API keys with sk-ant-api
+if [[ "${ANTHROPIC_API_KEY:-}" == sk-ant-oat* ]]; then
+    echo "Detected OAuth token — setting CLAUDE_CODE_OAUTH_TOKEN"
+    export CLAUDE_CODE_OAUTH_TOKEN="${ANTHROPIC_API_KEY}"
+    export ANTHROPIC_API_KEY=""
+fi
+
 # Set API keys appropriately
 export CODEX_API_KEY="${OPENAI_API_KEY:-}"
 unset OPENAI_API_KEY 2>/dev/null || true
