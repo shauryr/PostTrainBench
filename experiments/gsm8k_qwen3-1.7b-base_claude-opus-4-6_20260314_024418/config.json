@@ -1,0 +1,12 @@
+{
+  "evaluation_task": "gsm8k",
+  "agent": "claude",
+  "agent_config": "claude-opus-4-6",
+  "model_to_train": "Qwen/Qwen3-1.7B-Base",
+  "num_hours": 10,
+  "gpu_id": 0,
+  "run_name": "gsm8k_qwen3-1.7b-base_claude-opus-4-6_20260314_024418",
+  "timestamp": "20260314_024418",
+  "hostname": "fs-mbz-gpu-279",
+  "gpu_name": "NVIDIA H200"
+}
