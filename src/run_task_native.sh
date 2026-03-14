@@ -136,11 +136,13 @@ solve_task() {
     # Ensure .venv python is used by all subprocesses (including Claude's tool calls)
     export PATH="${REPO_ROOT}/.venv/bin:${PATH}"
     export VIRTUAL_ENV="${REPO_ROOT}/.venv"
+    # Claude Code temp/working files go into the experiment dir for tracking
+    export CLAUDE_CODE_TMPDIR="${EVAL_DIR}"
 
     cd "${TASK_DIR}"
 
     timeout --signal=TERM --kill-after=30s "$((NUM_HOURS * 60 + 5))m" \
-        bash -c "export PATH='${REPO_ROOT}/.venv/bin:${PATH}'; export VIRTUAL_ENV='${REPO_ROOT}/.venv'; bash ${EVAL_DIR}/agent_solve.sh" > "${SOLVE_OUT}" 2>&1
+        bash -c "export PATH='${REPO_ROOT}/.venv/bin:${PATH}'; export VIRTUAL_ENV='${REPO_ROOT}/.venv'; export CLAUDE_CODE_TMPDIR='${EVAL_DIR}'; bash ${EVAL_DIR}/agent_solve.sh" > "${SOLVE_OUT}" 2>&1
 }
 
 echo "================================"
