@@ -1,11 +1,12 @@
 #!/bin/bash
 # Native (no-container) version of run_task.sh
+# Uses EVAL_DIR as working directory (no /tmp, no containers)
+#
 # Usage: bash src/run_task_native.sh <eval> <agent> <model_to_train> <cluster_id> <num_hours> <agent_config> [gpu_id]
 #
 # Example:
 #   bash src/run_task_native.sh gsm8k claude Qwen/Qwen3-1.7B-Base 001 10 claude-opus-4-6 0
 
-# No set -e: we need non-zero exits from solve_task (e.g., timeout=124) to NOT kill the script
 set -o pipefail
 
 # --- Argument validation ---
@@ -33,12 +34,12 @@ export CUDA_VISIBLE_DEVICES="$GPU_ID"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
-# Pre-set defaults before sourcing set_env_vars.sh (which checks vars early)
+# Pre-set defaults
 export POST_TRAIN_BENCH_JOB_SCHEDULER="${POST_TRAIN_BENCH_JOB_SCHEDULER:-none}"
 export POST_TRAIN_BENCH_RESULTS_DIR="${POST_TRAIN_BENCH_RESULTS_DIR:-results}"
 export POST_TRAIN_BENCH_CONTAINERS_DIR="${POST_TRAIN_BENCH_CONTAINERS_DIR:-containers}"
 export POST_TRAIN_BENCH_CONTAINER_NAME="${POST_TRAIN_BENCH_CONTAINER_NAME:-standard}"
-export POST_TRAIN_BENCH_PROMPT="${POST_TRAIN_BENCH_PROMPT:-prompt}"
+export POST_TRAIN_BENCH_PROMPT="${POST_TRAIN_BENCH_PROMPT:-prompt_native}"
 export POST_TRAIN_BENCH_EXPERIMENT_NAME="${POST_TRAIN_BENCH_EXPERIMENT_NAME:-}"
 
 source src/commit_utils/set_env_vars.sh
@@ -48,99 +49,77 @@ source "${REPO_ROOT}/.venv/bin/activate"
 
 RESULT_PREFIX_SAFE=$(echo "$MODEL_TO_TRAIN" | tr '/:' '_')
 AGENT_CONFIG_SAFE=$(echo "$AGENT_CONFIG" | tr '/:' '_')
-RANDOM_UUID=$(uuidgen)
 
-# Use absolute path so it works after cd into job directory
+# Use absolute path — this IS the working directory (no /tmp)
 export EVAL_DIR="${REPO_ROOT}/${POST_TRAIN_BENCH_RESULTS_DIR}/${AGENT}_${AGENT_CONFIG_SAFE}_${NUM_HOURS}h${POST_TRAIN_BENCH_EXPERIMENT_NAME}/${EVALUATION_TASK}_${RESULT_PREFIX_SAFE}_${CLUSTER_ID}"
+TASK_DIR="${EVAL_DIR}/task"
 
-mkdir -p "${EVAL_DIR}"
+mkdir -p "${TASK_DIR}"
 
 # Log to files but also show on terminal
 exec > >(tee "${EVAL_DIR}/output.log") 2> >(tee "${EVAL_DIR}/error.log" >&2)
 
 echo "=== PostTrainBench Native Runner ==="
 echo "Task: $EVALUATION_TASK | Agent: $AGENT | Model: $MODEL_TO_TRAIN | GPU: $GPU_ID"
-echo "Config: $AGENT_CONFIG | Hours: $NUM_HOURS | Eval Dir: $EVAL_DIR"
-echo "$@"
+echo "Config: $AGENT_CONFIG | Hours: $NUM_HOURS"
+echo "Working dir: $TASK_DIR"
 
-# Keep path short to avoid AF_UNIX socket limit (108 chars)
-SHORT_UUID=$(echo "$RANDOM_UUID" | cut -c1-8)
-export TMP_SUBDIR="/tmp/ptb_${SHORT_UUID}"
+# --- Prepare task directory ---
+echo "Preparing task directory..."
 
-JOB_DIR="${TMP_SUBDIR}/job"
-JOB_TMP="${TMP_SUBDIR}/tmp"
-
-mkdir -p "${JOB_DIR}"
-mkdir -p "${JOB_TMP}"
-
-echo "Preparing job directory..."
-
-mkdir -p "${JOB_DIR}/task"
-
-# Copy evaluation files
-cp "src/eval/tasks/${EVALUATION_TASK}/evaluate.py" "${JOB_DIR}/task"
+cp "src/eval/tasks/${EVALUATION_TASK}/evaluate.py" "${TASK_DIR}/"
 if [ -d "src/eval/tasks/${EVALUATION_TASK}/evaluation_code" ]; then
-    cp -r "src/eval/tasks/${EVALUATION_TASK}/evaluation_code" "${JOB_DIR}/task"
+    cp -r "src/eval/tasks/${EVALUATION_TASK}/evaluation_code" "${TASK_DIR}/"
 fi
-cp -r src/eval/templates "${JOB_DIR}/task/"
+cp -r src/eval/templates "${TASK_DIR}/"
 
-# Copy task context (use /. to handle empty directories safely)
 if [ -d "src/eval/tasks/${EVALUATION_TASK}/task_context" ]; then
-    cp -r "src/eval/tasks/${EVALUATION_TASK}/task_context/." "${JOB_DIR}/task" 2>/dev/null || true
+    cp -r "src/eval/tasks/${EVALUATION_TASK}/task_context/." "${TASK_DIR}/" 2>/dev/null || true
 fi
 
-# Copy codex config (even if not using codex, the dir is expected)
-if [ -d "containers/other_home_data/.codex" ]; then
-    cp -r "containers/other_home_data/.codex" "${JOB_DIR}/"
-fi
-
+# --- Generate prompt (use native prompt template) ---
 BENCHMARK=$(cat "src/eval/tasks/${EVALUATION_TASK}/benchmark.txt")
 PROMPT=$(python src/eval/general/get_prompt.py --model-to-train "$MODEL_TO_TRAIN" --benchmark-id "$EVALUATION_TASK" --num-hours "$NUM_HOURS" --agent "${AGENT}")
 echo "$PROMPT" > "${EVAL_DIR}/prompt.txt"
 
-bash src/utils/create_timer.sh "$NUM_HOURS" "${JOB_DIR}/task/timer.sh"
+bash src/utils/create_timer.sh "$NUM_HOURS" "${TASK_DIR}/timer.sh"
 
+# --- Auth handling ---
 # Auto-detect OAuth token vs API key for Claude
-# OAuth tokens start with sk-ant-oat, API keys with sk-ant-api
 if [[ "${ANTHROPIC_API_KEY:-}" == sk-ant-oat* ]]; then
     echo "Detected OAuth token — setting CLAUDE_CODE_OAUTH_TOKEN"
     export CLAUDE_CODE_OAUTH_TOKEN="${ANTHROPIC_API_KEY}"
     export ANTHROPIC_API_KEY=""
 fi
 
-# Set API keys appropriately
 export CODEX_API_KEY="${OPENAI_API_KEY:-}"
 unset OPENAI_API_KEY 2>/dev/null || true
 if [ "$EVALUATION_TASK" == "arenahardwriting" ] || [ "$EVALUATION_TASK" == "healthbench" ]; then
     export OPENAI_API_KEY="${CODEX_API_KEY}"
 fi
 
-# Copy agent scripts
-cp src/utils/check_cuda.py "${JOB_DIR}/check_cuda.py"
-cp src/utils/check_cuda_writing.py "${JOB_DIR}/check_cuda_writing.py"
-cp "agents/${AGENT}/solve.sh" "${JOB_DIR}/agent_solve.sh"
+# --- Copy agent solve script ---
+cp "agents/${AGENT}/solve.sh" "${EVAL_DIR}/agent_solve.sh"
 
-# Copy agent-specific auth if present
 if [ -f "agents/${AGENT}/auth.json" ]; then
-    cp "agents/${AGENT}/auth.json" "${JOB_DIR}/.codex/auth.json"
+    mkdir -p "${EVAL_DIR}/.codex"
+    cp "agents/${AGENT}/auth.json" "${EVAL_DIR}/.codex/auth.json"
 fi
 if [ -f "agents/${AGENT}/oauth_token" ]; then
-    cp "agents/${AGENT}/oauth_token" "${JOB_DIR}/oauth_token"
+    cp "agents/${AGENT}/oauth_token" "${EVAL_DIR}/oauth_token"
 fi
 
-# Utils
+# --- Time tracking ---
 with_record_the_time() {
     local begin=$(date --iso-8601=seconds)
     "$@"
     local exit_code=$?
     local end=$(date --iso-8601=seconds)
-
     local time_taken=$(( $(date --date="$end" +%s) - $(date --date="$begin" +%s) ))
     printf '%02d:%02d:%02d\n' \
         $(( time_taken / 3600 )) \
         $(( (time_taken % 3600) / 60 )) \
         $(( time_taken % 60 )) > "${EVAL_DIR}/time_taken.txt"
-
     return $exit_code
 }
 
@@ -151,22 +130,22 @@ solve_task() {
     export PYTHONNOUSERSITE="1"
     export PROMPT="${PROMPT}"
     export AGENT_CONFIG="${AGENT_CONFIG}"
-    export TMPDIR="${JOB_TMP}"
+    # Short TMPDIR for Unix sockets (108-char limit)
+    export TMPDIR="/tmp/ptb_$(echo $CLUSTER_ID | cut -c1-8)"
+    mkdir -p "$TMPDIR"
 
-    cd "${JOB_DIR}/task"
+    cd "${TASK_DIR}"
 
     timeout --signal=TERM --kill-after=30s "$((NUM_HOURS * 60 + 5))m" \
-        bash -c "bash ${JOB_DIR}/agent_solve.sh" > "${SOLVE_OUT}" 2>&1
+        bash -c "bash ${EVAL_DIR}/agent_solve.sh" > "${SOLVE_OUT}" 2>&1
 }
 
 echo "================================"
 echo "========= RUNNING TASK ========="
 echo "================================"
 
-# Capture exit code without set -e killing us
 with_record_the_time solve_task && SOLVE_EXIT=0 || SOLVE_EXIT=$?
 
-# Return to repo root
 cd "$REPO_ROOT"
 
 echo "--- SOLVE DIAGNOSTICS ---"
@@ -180,10 +159,9 @@ elif [ $SOLVE_EXIT -gt 128 ]; then
 else
     echo "status: exited with error code $SOLVE_EXIT"
 fi
-echo "final_model_files: $(ls "${JOB_DIR}/task/final_model/" 2>/dev/null | wc -l)"
+echo "final_model_files: $(ls "${TASK_DIR}/final_model/" 2>/dev/null | wc -l)"
 echo "hostname: $(hostname)"
-echo "disk_job_dir: $(du -sh "${JOB_DIR}" 2>/dev/null | cut -f1)"
-echo "disk_tmp: $(du -sh "${JOB_TMP}" 2>/dev/null | cut -f1)"
+echo "disk_task_dir: $(du -sh "${TASK_DIR}" 2>/dev/null | cut -f1)"
 echo "memory: $(free -m 2>/dev/null | grep Mem | awk '{print "total=" $2 "MB used=" $3 "MB free=" $4 "MB"}')"
 echo "--- END SOLVE DIAGNOSTICS ---"
 
@@ -191,39 +169,24 @@ echo "============================================"
 echo "=== TASK COMPLETE, PARSING AGENT TRACE ==="
 echo "============================================"
 
-# Parse agent trace into human-readable format
 TRACE_PARSER="${REPO_ROOT}/agents/${AGENT}/human_readable_trace.py"
 if [ -f "$TRACE_PARSER" ]; then
     python "$TRACE_PARSER" "${SOLVE_OUT}" -o "${EVAL_DIR}/solve_parsed.txt" || true
-    cp "${EVAL_DIR}/solve_parsed.txt" "${JOB_DIR}/solve_parsed.txt" 2>/dev/null || true
 else
     echo "Warning: No trace parser found at $TRACE_PARSER, using raw output"
-    cp "${SOLVE_OUT}" "${JOB_DIR}/solve_parsed.txt" 2>/dev/null || true
+    cp "${SOLVE_OUT}" "${EVAL_DIR}/solve_parsed.txt" 2>/dev/null || true
 fi
 
-echo "============================="
-echo "======== CLEANING UP ========"
-echo "============================="
-
-echo "Task directory contents:"
-find "${JOB_DIR}/task" -maxdepth 2 -type f | head -50
-echo "================================"
-
-if [ -d "${JOB_DIR}/task/final_model" ]; then
-    cp -r "${JOB_DIR}/task/final_model" "$EVAL_DIR/final_model"
+# Move final_model to EVAL_DIR level if agent put it in task/
+if [ -d "${TASK_DIR}/final_model" ] && [ ! -d "${EVAL_DIR}/final_model" ]; then
+    mv "${TASK_DIR}/final_model" "${EVAL_DIR}/final_model"
 fi
-
-python "${REPO_ROOT}/containers/delete_hf_models.py" "${JOB_DIR}/task" 2>/dev/null || true
-
-cp -r "${JOB_DIR}/task" "$EVAL_DIR/task"
 
 echo "================================"
 echo "========= EVALUATING ==========="
 echo "================================"
 
 export EVAL_COUNTER=0
-
-# Export env vars so child bash -c inherits them (avoids leaking secrets in ps)
 export VLLM_API_KEY="inspectai"
 
 run_evaluation_with_retry() {
@@ -240,7 +203,6 @@ run_evaluation_with_retry() {
         export EVAL_COUNTER
         echo "Evaluation attempt $EVAL_COUNTER (phase attempt $attempt of $max_retries)"
 
-        # Use a function in a subshell instead of bash -c to avoid leaking env in cmdline
         (
             source "${REPO_ROOT}/.venv/bin/activate"
             export CUDA_VISIBLE_DEVICES="$GPU_ID"
@@ -258,15 +220,12 @@ run_evaluation_with_retry() {
             return 0
         fi
     done
-
     return 1
 }
 
 if [ -d "${EVAL_DIR}/final_model" ]; then
-    # First evaluation: up to 4 attempts
     run_evaluation_with_retry 4 ""
 
-    # Second evaluation with adjusted max tokens
     case "${EVALUATION_TASK}" in
         aime2025)       MAX_TOKENS_ARG="--max-tokens 12000" ;;
         arenahardwriting) MAX_TOKENS_ARG="--max-new-tokens 12288" ;;
@@ -279,7 +238,6 @@ if [ -d "${EVAL_DIR}/final_model" ]; then
     esac
     run_evaluation_with_retry 3 "$MAX_TOKENS_ARG"
 
-    # Third evaluation with further adjusted max tokens
     case "${EVALUATION_TASK}" in
         aime2025)       MAX_TOKENS_ARG="--max-tokens 8000" ;;
         arenahardwriting) MAX_TOKENS_ARG="--max-new-tokens 8192" ;;
@@ -302,7 +260,6 @@ else
     echo "WARNING: No final_model directory found - agent did not produce a model"
 fi
 
-# Output EVAL_DIR for callers to capture
 echo "EVAL_DIR=${EVAL_DIR}" > "${EVAL_DIR}/.eval_dir"
 
 echo "================================"
