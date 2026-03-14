@@ -14,6 +14,11 @@
 
 set -o pipefail
 
+if [ $# -lt 5 ]; then
+    echo "Usage: $0 <eval> <agent> <model_to_train> <num_hours> <agent_config> [gpu_id]" >&2
+    exit 1
+fi
+
 EVALUATION_TASK="$1"
 AGENT="$2"
 MODEL_TO_TRAIN="$3"
@@ -77,15 +82,6 @@ git push -u origin "$BRANCH_NAME" 2>&1
 sleep 3
 
 # --- Create PR ---
-PR_BODY="$(cat <<'PRBODYEOF'
-## Experiment: EVAL_TASK / MODEL / CONFIG
-
-### Config
-| Parameter | Value |
-|-----------|-------|
-PRBODYEOF
-)"
-# Build PR body with actual values
 PR_BODY="## Experiment: ${EVALUATION_TASK} / ${MODEL_SHORT} / ${CONFIG_SHORT}
 
 ### Config
@@ -114,8 +110,13 @@ PR_URL=$(gh pr create \
     --head "$BRANCH_NAME" \
     --base main 2>&1) || true
 
-echo "PR: ${PR_URL}"
-echo "$PR_URL" > "${EXP_DIR}/.pr_url"
+if [[ "$PR_URL" == http* ]]; then
+    echo "PR created: ${PR_URL}"
+    echo "$PR_URL" > "${EXP_DIR}/.pr_url"
+else
+    echo "WARNING: Failed to create PR: ${PR_URL}" >&2
+    echo "" > "${EXP_DIR}/.pr_url"
+fi
 
 # --- Run the actual task ---
 echo ""
@@ -140,7 +141,7 @@ TASK_EXIT=$?
 # --- Locate results ---
 RESULT_PREFIX_SAFE=$(echo "$MODEL_TO_TRAIN" | tr '/:' '_')
 AGENT_CONFIG_SAFE=$(echo "$AGENT_CONFIG" | tr '/:' '_')
-EVAL_DIR="${REPO_ROOT}/results/${AGENT}_${AGENT_CONFIG_SAFE}_${NUM_HOURS}h/${EVALUATION_TASK}_${RESULT_PREFIX_SAFE}_${RUN_ID}"
+EVAL_DIR="${REPO_ROOT}/${POST_TRAIN_BENCH_RESULTS_DIR}/${AGENT}_${AGENT_CONFIG_SAFE}_${NUM_HOURS}h${POST_TRAIN_BENCH_EXPERIMENT_NAME}/${EVALUATION_TASK}_${RESULT_PREFIX_SAFE}_${RUN_ID}"
 
 echo ""
 echo "=== Committing experiment artifacts ==="

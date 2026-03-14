@@ -5,7 +5,14 @@
 # Example:
 #   bash src/run_task_native.sh gsm8k claude Qwen/Qwen3-1.7B-Base 001 10 claude-opus-4-6 0
 
-set -eo pipefail
+# No set -e: we need non-zero exits from solve_task (e.g., timeout=124) to NOT kill the script
+set -o pipefail
+
+# --- Argument validation ---
+if [ $# -lt 6 ]; then
+    echo "Usage: $0 <eval> <agent> <model> <cluster_id> <hours> <config> [gpu_id]" >&2
+    exit 1
+fi
 
 export EVALUATION_TASK="$1"
 AGENT="$2"
@@ -14,6 +21,11 @@ CLUSTER_ID="$4"
 NUM_HOURS="$5"
 AGENT_CONFIG="$6"
 GPU_ID="${7:-0}"
+
+if ! [[ "$NUM_HOURS" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: NUM_HOURS must be a positive integer, got '$NUM_HOURS'" >&2
+    exit 1
+fi
 
 # Restrict to a single GPU
 export CUDA_VISIBLE_DEVICES="$GPU_ID"
@@ -70,8 +82,9 @@ if [ -d "src/eval/tasks/${EVALUATION_TASK}/evaluation_code" ]; then
 fi
 cp -r src/eval/templates "${JOB_DIR}/task/"
 
+# Copy task context (use /. to handle empty directories safely)
 if [ -d "src/eval/tasks/${EVALUATION_TASK}/task_context" ]; then
-    cp -r "src/eval/tasks/${EVALUATION_TASK}/task_context/"* "${JOB_DIR}/task"
+    cp -r "src/eval/tasks/${EVALUATION_TASK}/task_context/." "${JOB_DIR}/task" 2>/dev/null || true
 fi
 
 # Copy codex config (even if not using codex, the dir is expected)
@@ -124,9 +137,6 @@ with_record_the_time() {
 SOLVE_OUT="${EVAL_DIR}/solve_out.txt"
 
 solve_task() {
-    # Run agent natively (no container)
-    # Set up environment to mimic the container
-    export HF_HOME="${HF_HOME}"
     export VLLM_API_KEY="inspectai"
     export PYTHONNOUSERSITE="1"
     export PROMPT="${PROMPT}"
@@ -143,8 +153,8 @@ echo "================================"
 echo "========= RUNNING TASK ========="
 echo "================================"
 
-with_record_the_time solve_task
-SOLVE_EXIT=$?
+# Capture exit code without set -e killing us
+with_record_the_time solve_task && SOLVE_EXIT=0 || SOLVE_EXIT=$?
 
 # Return to repo root
 cd "$REPO_ROOT"
@@ -174,11 +184,11 @@ echo "============================================"
 # Parse agent trace into human-readable format
 TRACE_PARSER="${REPO_ROOT}/agents/${AGENT}/human_readable_trace.py"
 if [ -f "$TRACE_PARSER" ]; then
-    python "$TRACE_PARSER" "${SOLVE_OUT}" -o "${EVAL_DIR}/solve_parsed.txt"
-    cp "${EVAL_DIR}/solve_parsed.txt" "${JOB_DIR}/solve_parsed.txt"
+    python "$TRACE_PARSER" "${SOLVE_OUT}" -o "${EVAL_DIR}/solve_parsed.txt" || true
+    cp "${EVAL_DIR}/solve_parsed.txt" "${JOB_DIR}/solve_parsed.txt" 2>/dev/null || true
 else
     echo "Warning: No trace parser found at $TRACE_PARSER, using raw output"
-    cp "${SOLVE_OUT}" "${JOB_DIR}/solve_parsed.txt"
+    cp "${SOLVE_OUT}" "${JOB_DIR}/solve_parsed.txt" 2>/dev/null || true
 fi
 
 echo "============================="
@@ -193,7 +203,7 @@ if [ -d "${JOB_DIR}/task/final_model" ]; then
     cp -r "${JOB_DIR}/task/final_model" "$EVAL_DIR/final_model"
 fi
 
-python containers/delete_hf_models.py "${JOB_DIR}/task" 2>/dev/null || true
+python "${REPO_ROOT}/containers/delete_hf_models.py" "${JOB_DIR}/task" 2>/dev/null || true
 
 cp -r "${JOB_DIR}/task" "$EVAL_DIR/task"
 
@@ -203,21 +213,8 @@ echo "================================"
 
 export EVAL_COUNTER=0
 
-run_evaluation() {
-    local max_tokens_arg="$1"
-    local eval_num="$2"
-    # Kill any leftover GPU processes on our GPU
-    nvidia-smi --id=$GPU_ID --query-compute-apps=pid --format=csv,noheader 2>/dev/null | xargs -r kill -9 2>/dev/null || true
-    sleep 5
-    cd "${REPO_ROOT}/src/eval/tasks/${EVALUATION_TASK}"
-    python evaluate.py \
-        --model-path "$EVAL_DIR/final_model" \
-        --templates-dir "${REPO_ROOT}/src/eval/templates" \
-        --limit -1 \
-        ${max_tokens_arg} \
-        --json-output-file "${EVAL_DIR}/metrics.json" > "$EVAL_DIR/final_eval_${eval_num}.txt" 2>&1
-    cd "$REPO_ROOT"
-}
+# Export env vars so child bash -c inherits them (avoids leaking secrets in ps)
+export VLLM_API_KEY="inspectai"
 
 run_evaluation_with_retry() {
     local max_retries="$1"
@@ -233,20 +230,19 @@ run_evaluation_with_retry() {
         export EVAL_COUNTER
         echo "Evaluation attempt $EVAL_COUNTER (phase attempt $attempt of $max_retries)"
 
-        timeout --signal=TERM --kill-after=60s 28800s bash -c "
-            source ${REPO_ROOT}/.venv/bin/activate
-            export CUDA_VISIBLE_DEVICES=$GPU_ID
-            export HF_HOME=${HF_HOME}
-            export VLLM_API_KEY=inspectai
-            export OPENAI_API_KEY=${OPENAI_API_KEY:-}
-            cd ${REPO_ROOT}/src/eval/tasks/${EVALUATION_TASK}
-            python evaluate.py \
-                --model-path $EVAL_DIR/final_model \
-                --templates-dir ${REPO_ROOT}/src/eval/templates \
-                --limit -1 \
-                $max_tokens_arg \
-                --json-output-file ${EVAL_DIR}/metrics.json
-        " > "$EVAL_DIR/final_eval_${EVAL_COUNTER}.txt" 2>&1 || true
+        # Use a function in a subshell instead of bash -c to avoid leaking env in cmdline
+        (
+            source "${REPO_ROOT}/.venv/bin/activate"
+            export CUDA_VISIBLE_DEVICES="$GPU_ID"
+            cd "${REPO_ROOT}/src/eval/tasks/${EVALUATION_TASK}"
+            timeout --signal=TERM --kill-after=60s 28800s \
+                python evaluate.py \
+                    --model-path "$EVAL_DIR/final_model" \
+                    --templates-dir "${REPO_ROOT}/src/eval/templates" \
+                    --limit -1 \
+                    $max_tokens_arg \
+                    --json-output-file "${EVAL_DIR}/metrics.json"
+        ) > "$EVAL_DIR/final_eval_${EVAL_COUNTER}.txt" 2>&1 || true
 
         if [ -f "${EVAL_DIR}/metrics.json" ]; then
             return 0
@@ -295,6 +291,9 @@ if [ -d "${EVAL_DIR}/final_model" ]; then
 else
     echo "WARNING: No final_model directory found - agent did not produce a model"
 fi
+
+# Output EVAL_DIR for callers to capture
+echo "EVAL_DIR=${EVAL_DIR}" > "${EVAL_DIR}/.eval_dir"
 
 echo "================================"
 echo "======= ALL DONE ========"
