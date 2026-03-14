@@ -1,0 +1,9 @@
+=== PostTrainBench Native Runner ===
+Task: gsm8k | Agent: claude | Model: Qwen/Qwen3-1.7B-Base | GPU: 0
+Config: claude-opus-4-6 | Hours: 10
+Working dir: /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/results/claude_claude-opus-4-6_10h/gsm8k_Qwen_Qwen3-1.7B-Base_20260314_024418/task
+Preparing task directory...
+Detected OAuth token — setting CLAUDE_CODE_OAUTH_TOKEN
+================================
+========= RUNNING TASK =========
+================================
