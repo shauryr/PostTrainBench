@@ -63,9 +63,11 @@ echo "Task: $EVALUATION_TASK | Agent: $AGENT | Model: $MODEL_TO_TRAIN | GPU: $GP
 echo "Config: $AGENT_CONFIG | Hours: $NUM_HOURS | Eval Dir: $EVAL_DIR"
 echo "$@"
 
-export TMP_SUBDIR="/tmp/posttrain_native_${EVALUATION_TASK}_${RESULT_PREFIX_SAFE}_${RANDOM_UUID}"
+# Keep path short to avoid AF_UNIX socket limit (108 chars)
+SHORT_UUID=$(echo "$RANDOM_UUID" | cut -c1-8)
+export TMP_SUBDIR="/tmp/ptb_${SHORT_UUID}"
 
-JOB_DIR="${TMP_SUBDIR}/job_dir"
+JOB_DIR="${TMP_SUBDIR}/job"
 JOB_TMP="${TMP_SUBDIR}/tmp"
 
 mkdir -p "${JOB_DIR}"
