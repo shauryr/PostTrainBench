@@ -5,7 +5,7 @@
 # Example:
 #   bash src/run_task_native.sh gsm8k claude Qwen/Qwen3-1.7B-Base 001 10 claude-opus-4-6 0
 
-set -euo pipefail
+set -eo pipefail
 
 export EVALUATION_TASK="$1"
 AGENT="$2"
@@ -20,6 +20,14 @@ export CUDA_VISIBLE_DEVICES="$GPU_ID"
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
+
+# Pre-set defaults before sourcing set_env_vars.sh (which checks vars early)
+export POST_TRAIN_BENCH_JOB_SCHEDULER="${POST_TRAIN_BENCH_JOB_SCHEDULER:-none}"
+export POST_TRAIN_BENCH_RESULTS_DIR="${POST_TRAIN_BENCH_RESULTS_DIR:-results}"
+export POST_TRAIN_BENCH_CONTAINERS_DIR="${POST_TRAIN_BENCH_CONTAINERS_DIR:-containers}"
+export POST_TRAIN_BENCH_CONTAINER_NAME="${POST_TRAIN_BENCH_CONTAINER_NAME:-standard}"
+export POST_TRAIN_BENCH_PROMPT="${POST_TRAIN_BENCH_PROMPT:-prompt}"
+export POST_TRAIN_BENCH_EXPERIMENT_NAME="${POST_TRAIN_BENCH_EXPERIMENT_NAME:-}"
 
 source src/commit_utils/set_env_vars.sh
 

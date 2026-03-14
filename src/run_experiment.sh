@@ -12,7 +12,7 @@
 #   - A GitHub PR with status updates and metrics
 #   - Artifacts under experiments/<run-name>/
 
-set -uo pipefail
+set -o pipefail
 
 EVALUATION_TASK="$1"
 AGENT="$2"
@@ -38,13 +38,18 @@ echo "Run: ${RUN_NAME}"
 echo "Branch: ${BRANCH_NAME}"
 echo ""
 
-# --- Create branch ---
-git checkout -b "$BRANCH_NAME" 2>/dev/null || { echo "ERROR: Failed to create branch"; exit 1; }
+# --- Ensure we're on main and up to date ---
+git checkout main 2>/dev/null
+git pull origin main --ff-only 2>/dev/null || true
+
+# --- Create branch from main ---
+git checkout -b "$BRANCH_NAME" main 2>/dev/null || { echo "ERROR: Failed to create branch"; exit 1; }
 
 # --- Create experiment directory ---
 mkdir -p "$EXP_DIR"
 
 # --- Write config ---
+GPU_NAME="$(nvidia-smi --id=$GPU_ID --query-gpu=name --format=csv,noheader 2>/dev/null || echo unknown)"
 cat > "${EXP_DIR}/config.json" <<CONF
 {
   "evaluation_task": "${EVALUATION_TASK}",
@@ -56,18 +61,29 @@ cat > "${EXP_DIR}/config.json" <<CONF
   "run_name": "${RUN_NAME}",
   "timestamp": "${TIMESTAMP}",
   "hostname": "$(hostname)",
-  "gpu_name": "$(nvidia-smi --id=$GPU_ID --query-gpu=name --format=csv,noheader 2>/dev/null || echo unknown)"
+  "gpu_name": "${GPU_NAME}"
 }
 CONF
 
-# --- Commit config and create PR ---
+# --- Commit config and push ---
 git add "${EXP_DIR}/config.json"
 git commit -m "Start experiment: ${EVALUATION_TASK} / ${MODEL_SHORT} / ${CONFIG_SHORT}"
-
 git push -u origin "$BRANCH_NAME" 2>&1
 
-PR_BODY="$(cat <<PRBODY
-## Experiment: ${EVALUATION_TASK} / ${MODEL_SHORT} / ${CONFIG_SHORT}
+# Wait for GitHub to register the branch
+sleep 3
+
+# --- Create PR ---
+PR_BODY="$(cat <<'PRBODYEOF'
+## Experiment: EVAL_TASK / MODEL / CONFIG
+
+### Config
+| Parameter | Value |
+|-----------|-------|
+PRBODYEOF
+)"
+# Build PR body with actual values
+PR_BODY="## Experiment: ${EVALUATION_TASK} / ${MODEL_SHORT} / ${CONFIG_SHORT}
 
 ### Config
 | Parameter | Value |
@@ -75,7 +91,7 @@ PR_BODY="$(cat <<PRBODY
 | Benchmark | \`${EVALUATION_TASK}\` |
 | Model | \`${MODEL_TO_TRAIN}\` |
 | Agent | \`${AGENT}\` (\`${AGENT_CONFIG}\`) |
-| GPU | ${GPU_ID} ($(nvidia-smi --id=$GPU_ID --query-gpu=name --format=csv,noheader 2>/dev/null || echo unknown)) |
+| GPU | ${GPU_ID} (${GPU_NAME}) |
 | Time limit | ${NUM_HOURS}h |
 | Started | $(date -u '+%Y-%m-%d %H:%M UTC') |
 
@@ -86,23 +102,26 @@ PR_BODY="$(cat <<PRBODY
 _Pending..._
 
 ### Artifacts
-- [\`config.json\`](experiments/${RUN_NAME}/config.json) — Run configuration
-PRBODY
-)"
+- [\`config.json\`](experiments/${RUN_NAME}/config.json) — Run configuration"
 
 PR_URL=$(gh pr create \
     --title "[Exp] ${EVALUATION_TASK} / ${MODEL_SHORT} / ${CONFIG_SHORT}" \
     --body "$PR_BODY" \
     --draft \
     --head "$BRANCH_NAME" \
-    --base main 2>&1)
+    --base main 2>&1) || true
 
-echo "PR created: ${PR_URL}"
+echo "PR: ${PR_URL}"
 echo "$PR_URL" > "${EXP_DIR}/.pr_url"
 
 # --- Run the actual task ---
 echo ""
 echo "=== Starting task execution ==="
+
+# Pre-set env vars needed by run_task_native.sh
+export POST_TRAIN_BENCH_JOB_SCHEDULER="${POST_TRAIN_BENCH_JOB_SCHEDULER:-none}"
+export POST_TRAIN_BENCH_RESULTS_DIR="${POST_TRAIN_BENCH_RESULTS_DIR:-results}"
+export POST_TRAIN_BENCH_EXPERIMENT_NAME="${POST_TRAIN_BENCH_EXPERIMENT_NAME:-}"
 
 bash src/run_task_native.sh \
     "$EVALUATION_TASK" \
