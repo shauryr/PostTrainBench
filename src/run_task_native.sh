@@ -133,11 +133,14 @@ solve_task() {
     # Short TMPDIR for Unix sockets (108-char limit)
     export TMPDIR="/tmp/ptb_$(echo $CLUSTER_ID | cut -c1-8)"
     mkdir -p "$TMPDIR"
+    # Ensure .venv python is used by all subprocesses (including Claude's tool calls)
+    export PATH="${REPO_ROOT}/.venv/bin:${PATH}"
+    export VIRTUAL_ENV="${REPO_ROOT}/.venv"
 
     cd "${TASK_DIR}"
 
     timeout --signal=TERM --kill-after=30s "$((NUM_HOURS * 60 + 5))m" \
-        bash -c "bash ${EVAL_DIR}/agent_solve.sh" > "${SOLVE_OUT}" 2>&1
+        bash -c "export PATH='${REPO_ROOT}/.venv/bin:${PATH}'; export VIRTUAL_ENV='${REPO_ROOT}/.venv'; bash ${EVAL_DIR}/agent_solve.sh" > "${SOLVE_OUT}" 2>&1
 }
 
 echo "================================"
