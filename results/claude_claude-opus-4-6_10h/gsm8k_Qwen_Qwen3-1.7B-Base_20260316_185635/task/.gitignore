@@ -1,0 +1,9 @@
+final_model/
+*.pt
+*.bin
+*.safetensors
+__pycache__/
+sft_output/
+checkpoints/
+*.log
+wandb/
