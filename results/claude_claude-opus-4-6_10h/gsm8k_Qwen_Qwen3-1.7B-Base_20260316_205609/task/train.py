@@ -180,7 +180,7 @@ def main():
     print("Loading model...")
     model = AutoModelForCausalLM.from_pretrained(
         args.model_name,
-        torch_dtype=torch.bfloat16,
+        dtype=torch.bfloat16,
         trust_remote_code=True,
         attn_implementation="flash_attention_2",
     )
@@ -199,7 +199,7 @@ def main():
         logging_steps=args.logging_steps,
         save_steps=args.save_steps,
         save_total_limit=args.save_total_limit,
-        max_seq_length=args.max_seq_length,
+        max_length=args.max_seq_length,
         seed=args.seed,
         gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False},
