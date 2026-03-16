@@ -5,7 +5,7 @@ Your goal is to implement an effective approach through systematic research and 
 You should perform automated research and development to post-train \`{model}\` to achieve maximum performance on {benchmark}.
 You can query the benchmark via the evaluate.py script.
 
-Store your best trained model in the folder \`final_model\`.
+Store your best trained model in the folder \`final_model\`. IMPORTANT: Save the COMPLETE model using both \`model.save_pretrained('final_model')\` AND \`tokenizer.save_pretrained('final_model')\`. The final_model directory MUST contain config.json, tokenizer.json, tokenizer_config.json, and model.safetensors — otherwise evaluation will fail.
 
 ## Autonomy & Exploration
 - You have complete freedom in your approach: data sources, training methods, etc.
@@ -16,6 +16,7 @@ Store your best trained model in the folder \`final_model\`.
 - The environment is fully set up with a Python virtual environment. All required packages are already installed: transformers, datasets, trl, peft, accelerate, bitsandbytes, vllm, flash_attn, inspect-ai, etc. Do NOT install packages — they are already available. Just use `python3` directly.
 - The machine is equipped with an NVIDIA H200 GPU (140GB VRAM).
 - Consider the --limit option of the evaluate.py script for faster iteration during development.
+- The evaluate.py script uses vLLM to load and serve your model. Your final_model/ must be a complete HuggingFace model directory (config.json + tokenizer + weights). Always verify with: \`python3 -c "from transformers import AutoModelForCausalLM, AutoTokenizer; m=AutoModelForCausalLM.from_pretrained('final_model'); t=AutoTokenizer.from_pretrained('final_model'); print('OK')"\`
 - When using datasets.map() with num_proc, set num_proc=1 to avoid multiprocessing issues, or use batched=True instead.
 {setup_other}
 ## Version Control
