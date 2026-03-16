@@ -47,6 +47,10 @@ source src/commit_utils/set_env_vars.sh
 # Activate the project venv
 source "${REPO_ROOT}/.venv/bin/activate"
 
+# Python.h headers needed by vLLM for cuda_utils compilation
+export C_INCLUDE_PATH="${HOME}/.local/include/python3.10:${HOME}/.local/include:${C_INCLUDE_PATH:-}"
+export CPATH="${HOME}/.local/include/python3.10:${HOME}/.local/include:${CPATH:-}"
+
 RESULT_PREFIX_SAFE=$(echo "$MODEL_TO_TRAIN" | tr '/:' '_')
 AGENT_CONFIG_SAFE=$(echo "$AGENT_CONFIG" | tr '/:' '_')
 
@@ -142,7 +146,7 @@ solve_task() {
     cd "${TASK_DIR}"
 
     timeout --signal=TERM --kill-after=30s "$((NUM_HOURS * 60 + 5))m" \
-        bash -c "export PATH='${REPO_ROOT}/.venv/bin:${PATH}'; export VIRTUAL_ENV='${REPO_ROOT}/.venv'; export CLAUDE_CODE_TMPDIR='${EVAL_DIR}'; bash ${EVAL_DIR}/agent_solve.sh" > "${SOLVE_OUT}" 2>&1
+        bash -c "export PATH='${REPO_ROOT}/.venv/bin:${PATH}'; export VIRTUAL_ENV='${REPO_ROOT}/.venv'; export CLAUDE_CODE_TMPDIR='${EVAL_DIR}'; export C_INCLUDE_PATH='${HOME}/.local/include/python3.10:${HOME}/.local/include'; export CPATH='${HOME}/.local/include/python3.10:${HOME}/.local/include'; bash ${EVAL_DIR}/agent_solve.sh" > "${SOLVE_OUT}" 2>&1
 }
 
 echo "================================"
