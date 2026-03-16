@@ -1,0 +1,174 @@
+Loading dataset openai/gsm8k from Hugging Face...
+Saving the dataset (0/1 shards):   0%|          | 0/7473 [00:00<?, ? examples/s]Saving the dataset (1/1 shards): 100%|██████████| 7473/7473 [00:00<00:00, 192361.95 examples/s]Saving the dataset (1/1 shards): 100%|██████████| 7473/7473 [00:00<00:00, 191632.79 examples/s]
+Loading dataset openai/gsm8k from Hugging Face...
+Saving the dataset (0/1 shards):   0%|          | 0/1319 [00:00<?, ? examples/s]Saving the dataset (1/1 shards): 100%|██████████| 1319/1319 [00:00<00:00, 116092.81 examples/s]Saving the dataset (1/1 shards): 100%|██████████| 1319/1319 [00:00<00:00, 114963.78 examples/s]
+---------------------------------------------------------                       
+gsm8k (50 samples): vllm/final_model                                            
+timeout: 18000000, attempt_timeout: 18000000, max_connections: 1, max_tokens:   
+4000, log_realtime: False, score_display: False, dataset: openai/gsm8k          
+---------------------------------------------------------                       
+                                                                                
+[03/16/26 20:54:26] ERROR    Server process exited           local_server.py:249
+                             unexpectedly with code 1. Try                      
+                             rerunning with '--log-level                        
+                             debug' to see the full                             
+                             traceback. Alternatively, you                      
+                             can run the following launch                       
+                             command manually to see the                        
+                             full traceback:                                    
+                                                                                
+                             vllm serve final_model --host                      
+                             0.0.0.0 --api-key inspectai                        
+                             --gpu-memory-utilization 0.5                       
+                             --chat-template                                    
+                             templates/qwen3.jinja --port                       
+                             31843                                              
+                                                                                
+kill: (1316299): No such process
+Steps:   2/50   4% | Samples:   0/ 50 | vllm:  0/ 1 | HTTP retries: 0
+
+---------------------------------------------------------                       
+gsm8k (50 samples): vllm/final_model                                            
+                                                                                
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in task_run                                                                  │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in tg_collect                                                                │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in run_task                                                                  │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in run_sample                                                                │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in task_run_sample                                                           │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in task_run_sample                                                           │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in run                                                                       │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in __call__                                                                  │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in solve                                                                     │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in generate                                                                  │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in task_generate                                                             │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in generate                                                                  │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in _generate                                                                 │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in async_wrapped                                                             │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in __call__                                                                  │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in iter                                                                      │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in inner                                                                     │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in <lambda>                                                                  │
+│                                                                              │
+│ /usr/lib/python3.10/concurrent/futures/_base.py:451 in result                │
+│                                                                              │
+│   448 │   │   │   │   if self._state in [CANCELLED, CANCELLED_AND_NOTIFIED]: │
+│   449 │   │   │   │   │   raise CancelledError()                             │
+│   450 │   │   │   │   elif self._state == FINISHED:                          │
+│ ❱ 451 │   │   │   │   │   return self.__get_result()                         │
+│   452 │   │   │   │                                                          │
+│   453 │   │   │   │   self._condition.wait(timeout)                          │
+│   454                                                                        │
+│                                                                              │
+│ /usr/lib/python3.10/concurrent/futures/_base.py:403 in __get_result          │
+│                                                                              │
+│   400 │   def __get_result(self):                                            │
+│   401 │   │   if self._exception:                                            │
+│   402 │   │   │   try:                                                       │
+│ ❱ 403 │   │   │   │   raise self._exception                                  │
+│   404 │   │   │   finally:                                                   │
+│   405 │   │   │   │   # Break a reference cycle with the exception in self._ │
+│   406 │   │   │   │   self = None                                            │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in __call__                                                                  │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in generate                                                                  │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in generate                                                                  │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in _ensure_server_started                                                    │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in run_sync                                                                  │
+│                                                                              │
+│   60 │   │   │   stacklevel=2,                                               │
+│   61 │   │   )                                                               │
+│   62 │                                                                       │
+│ ❱ 63 │   return await get_async_backend().run_sync_in_worker_thread(         │
+│   64 │   │   func, args, abandon_on_cancel=abandon_on_cancel, limiter=limite │
+│   65 │   )                                                                   │
+│   66                                                                         │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in run_sync_in_worker_thread                                                 │
+│                                                                              │
+│   2499 │   │   │   │   │   worker_scope = scope._parent_scope                │
+│   2500 │   │   │   │                                                         │
+│   2501 │   │   │   │   worker.queue.put_nowait((context, func, args, future, │
+│ ❱ 2502 │   │   │   │   return await future                                   │
+│   2503 │                                                                     │
+│   2504 │   @classmethod                                                      │
+│   2505 │   def check_cancelled(cls) -> None:                                 │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in run                                                                       │
+│                                                                              │
+│    983 │   │   │   │   │   exception: BaseException | None = None            │
+│    984 │   │   │   │   │   threadlocals.current_cancel_scope = cancel_scope  │
+│    985 │   │   │   │   │   try:                                              │
+│ ❱  986 │   │   │   │   │   │   result = context.run(func, *args)             │
+│    987 │   │   │   │   │   except BaseException as exc:                      │
+│    988 │   │   │   │   │   │   exception = exc                               │
+│    989 │   │   │   │   │   finally:                                          │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in _resolve_server                                                           │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in _start_server                                                             │
+│                                                                              │
+│ /mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/.venv/lib/python3.10… │
+│ in start_local_server                                                        │
+╰──────────────────────────────────────────────────────────────────────────────╯
+RuntimeError: Failed to start vLLM server: Server process exited unexpectedly   
+with code 1. Try rerunning with '--log-level debug' to see the full traceback.  
+Alternatively, you can run the following launch command manually to see the full
+traceback:                                                                      
+                                                                                
+vllm serve final_model --host 0.0.0.0 --api-key inspectai                       
+--gpu-memory-utilization 0.5 --chat-template templates/qwen3.jinja --port 31843 
+                                                                                
+                                                                                
+Task interrupted (no samples completed before interruption)                     
+Log: logs/2026-03-16T20-54-10+00-00_gsm8k_gJaXfQXrvtHcsRPJYsgLdy.json           
+---------------------------------------------------------                       
+                                                                                
