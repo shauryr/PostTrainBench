@@ -17,7 +17,7 @@ Store your best trained model in the folder \`final_model\`. IMPORTANT: Save the
 - The machine is equipped with an NVIDIA H200 GPU (140GB VRAM).
 - Consider the --limit option of the evaluate.py script for faster iteration during development.
 - The evaluate.py script uses vLLM to load and serve your model. Your final_model/ must be a complete HuggingFace model directory (config.json + tokenizer + weights). Always verify with: \`python3 -c "from transformers import AutoModelForCausalLM, AutoTokenizer; m=AutoModelForCausalLM.from_pretrained('final_model'); t=AutoTokenizer.from_pretrained('final_model'); print('OK')"\`
-- When using datasets.map() with num_proc, set num_proc=1 to avoid multiprocessing issues, or use batched=True instead.
+- The machine has 128 CPU cores and 1.5TB RAM. Use num_proc=64 for datasets.map() tokenization to speed it up.
 {setup_other}
 ## Version Control
 You are working inside a git repository on an experiment branch. **Commit your work frequently** so progress is tracked:

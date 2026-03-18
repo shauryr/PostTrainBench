@@ -26,9 +26,11 @@
 6. **Higher `--gpu-memory-utilization`**: Use 0.8 instead of default 0.3 when running evaluate.py for faster inference.
 
 ## Hardware
-- 8x NVIDIA H200 GPUs, 140GB VRAM each
-- Total: 1.12TB GPU memory available
+- 8x NVIDIA H200 GPUs, 140GB VRAM each (1.12TB total GPU memory)
+- 128 CPU cores, 1.5TB system RAM
 - The model (1.7B params, bf16) uses ~3.4GB per GPU in DDP
+- Use `num_proc=64` for datasets.map() tokenization (not 1)
+- Use `dataloader_num_workers=16` for training
 
 ## Evaluation
 - `python3 evaluate.py --model-path final_model --limit 150 --max-connections 2 --gpu-memory-utilization 0.3`
