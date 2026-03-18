@@ -81,6 +81,18 @@ if [ -d "src/eval/tasks/${EVALUATION_TASK}/task_context" ]; then
     cp -r "src/eval/tasks/${EVALUATION_TASK}/task_context/." "${TASK_DIR}/" 2>/dev/null || true
 fi
 
+# --- Copy seed directory if it exists for this benchmark ---
+if [ -d "seed/${EVALUATION_TASK}" ]; then
+    echo "Seeding with previous findings from seed/${EVALUATION_TASK}/"
+    cp -r "seed/${EVALUATION_TASK}" "${TASK_DIR}/previous_run"
+    # Use seeded prompt if available
+    if [ -z "${POST_TRAIN_BENCH_PROMPT:-}" ] || [ "${POST_TRAIN_BENCH_PROMPT}" = "prompt_native" ]; then
+        if [ -f "src/eval/general/prompt_native_seeded.txt" ]; then
+            export POST_TRAIN_BENCH_PROMPT="prompt_native_seeded"
+        fi
+    fi
+fi
+
 # --- Generate prompt (use native prompt template) ---
 BENCHMARK=$(cat "src/eval/tasks/${EVALUATION_TASK}/benchmark.txt")
 PROMPT=$(python src/eval/general/get_prompt.py --model-to-train "$MODEL_TO_TRAIN" --benchmark-id "$EVALUATION_TASK" --num-hours "$NUM_HOURS" --agent "${AGENT}")
