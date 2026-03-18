@@ -1,0 +1,7 @@
+final_model/
+*.pt
+*.bin
+*.safetensors
+checkpoints*/
+__pycache__/
+*.pyc
