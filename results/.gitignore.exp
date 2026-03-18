@@ -1,0 +1,21 @@
+# Allow tracking experiment files (overrides the default * ignore)
+!*/
+!*.py
+!*.sh
+!*.json
+!*.txt
+!*.csv
+!*.jinja
+!*.log
+!*.md
+!*.yaml
+!*.yml
+!*.toml
+# Still ignore model weights and caches
+*.pt
+*.bin
+*.safetensors
+*.gguf
+__pycache__/
+.cache/
+wandb/

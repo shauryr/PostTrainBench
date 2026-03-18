@@ -1,0 +1,42 @@
+Loading dataset openai/gsm8k from Hugging Face...
+Saving the dataset (0/1 shards):   0%|          | 0/7473 [00:00<?, ? examples/s]Saving the dataset (1/1 shards): 100%|██████████| 7473/7473 [00:00<00:00, 154242.27 examples/s]Saving the dataset (1/1 shards): 100%|██████████| 7473/7473 [00:00<00:00, 153847.07 examples/s]
+Loading dataset openai/gsm8k from Hugging Face...
+Saving the dataset (0/1 shards):   0%|          | 0/1319 [00:00<?, ? examples/s]Saving the dataset (1/1 shards): 100%|██████████| 1319/1319 [00:00<00:00, 155589.25 examples/s]Saving the dataset (1/1 shards): 100%|██████████| 1319/1319 [00:00<00:00, 153631.96 examples/s]
+---------------------------------------------------------                       
+gsm8k (50 samples): vllm/final_model                                            
+timeout: 18000000, attempt_timeout: 18000000, max_connections: 2, max_tokens:   
+4000, log_realtime: False, score_display: False, dataset: openai/gsm8k          
+---------------------------------------------------------                       
+                                                                                
+Steps:   1/50   2% | Samples:   1/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:   4/50   8% | Samples:   4/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:   6/50  12% | Samples:   6/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:   9/50  18% | Samples:   9/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  11/50  22% | Samples:  11/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  14/50  28% | Samples:  14/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  17/50  34% | Samples:  17/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  21/50  42% | Samples:  21/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  24/50  48% | Samples:  24/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  27/50  54% | Samples:  27/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  31/50  62% | Samples:  31/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  32/50  64% | Samples:  32/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  34/50  68% | Samples:  34/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  37/50  74% | Samples:  37/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  39/50  78% | Samples:  39/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  43/50  86% | Samples:  43/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  47/50  94% | Samples:  47/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  50/50 100% | Samples:  50/ 50 | vllm:  0/ 2 | HTTP retries: 0
+
+---------------------------------------------------------                       
+gsm8k (50 samples): vllm/final_model                                            
+timeout: 18000000, attempt_timeout: 18000000, max_connections: 2, max_tokens:   
+4000, log_realtime: False, score_display: False, dataset: openai/gsm8k          
+                                                                                
+total time:              0:03:04                                                
+vllm/final_model         178,050 tokens [I: 110,886, O: 67,164]                 
+match                                                                           
+accuracy  0.000                                                                 
+stderr    0.000                                                                 
+Log: logs/2026-03-16T22-18-37+00-00_gsm8k_CBDnjDbsNR2EmaBzsJe5ov.json           
+---------------------------------------------------------                       
+                                                                                

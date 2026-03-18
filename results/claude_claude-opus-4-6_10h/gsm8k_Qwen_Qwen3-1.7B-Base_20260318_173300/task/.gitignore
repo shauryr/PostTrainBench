@@ -1,0 +1,6 @@
+final_model/
+checkpoints_*/
+*.pt
+*.bin
+*.safetensors
+__pycache__/

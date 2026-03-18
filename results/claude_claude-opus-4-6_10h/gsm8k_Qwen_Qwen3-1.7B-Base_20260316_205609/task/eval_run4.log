@@ -1,0 +1,28 @@
+Loading dataset openai/gsm8k from Hugging Face...
+Saving the dataset (0/1 shards):   0%|          | 0/7473 [00:00<?, ? examples/s]Saving the dataset (1/1 shards): 100%|██████████| 7473/7473 [00:00<00:00, 317163.84 examples/s]Saving the dataset (1/1 shards): 100%|██████████| 7473/7473 [00:00<00:00, 314847.71 examples/s]
+Loading dataset openai/gsm8k from Hugging Face...
+Saving the dataset (0/1 shards):   0%|          | 0/1319 [00:00<?, ? examples/s]Saving the dataset (1/1 shards): 100%|██████████| 1319/1319 [00:00<00:00, 145882.10 examples/s]Saving the dataset (1/1 shards): 100%|██████████| 1319/1319 [00:00<00:00, 144077.48 examples/s]
+---------------------------------------------------------                       
+gsm8k (50 samples): vllm/final_model                                            
+timeout: 18000000, attempt_timeout: 18000000, max_connections: 2, max_tokens:   
+4000, log_realtime: False, score_display: False, dataset: openai/gsm8k          
+---------------------------------------------------------                       
+                                                                                
+Steps:   1/50   2% | Samples:   1/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  23/50  46% | Samples:  23/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  46/50  92% | Samples:  46/ 50 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  50/50 100% | Samples:  50/ 50 | vllm:  0/ 2 | HTTP retries: 0
+
+---------------------------------------------------------                       
+gsm8k (50 samples): vllm/final_model                                            
+timeout: 18000000, attempt_timeout: 18000000, max_connections: 2, max_tokens:   
+4000, log_realtime: False, score_display: False, dataset: openai/gsm8k          
+                                                                                
+total time:               0:01:01                                               
+vllm/final_model          117,764 tokens [I: 110,886, O: 6,878]                 
+match                                                                           
+accuracy  0.560                                                                 
+stderr    0.071                                                                 
+Log: logs/2026-03-16T23-07-23+00-00_gsm8k_XtwmrEVJFPtAitt5mPFCkA.json           
+---------------------------------------------------------                       
+                                                                                
