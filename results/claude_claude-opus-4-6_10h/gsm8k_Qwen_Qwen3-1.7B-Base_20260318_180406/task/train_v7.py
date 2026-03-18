@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """
-SFT training v6: Fresh training from base with proven data + optimized hyperparams.
-Key changes from v4:
-- 7 epochs instead of 5 (more training on same good data)
-- Oversample GSM8K 3x within the dataset (more weight on actual task)
-- Larger effective batch size
-- max_length=1536 (same as v4)
-- Stricter answer formatting (always end with ANSWER: {integer})
+SFT training v7: Replicate v4 recipe but with key improvements.
+Hypothesis: v4 (5 epochs) might slightly overfit. Try 4 epochs with
+broader MetaMathQA data (add MATH_Rephrased for more diversity).
+Also ensure max_length handles the eval's 10-shot format.
 """
 
 import os
@@ -37,23 +34,29 @@ def extract_answer(text):
     return None
 
 
+def extract_answer_math(text):
+    """Extract answer from MATH-style format (boxed, etc.)."""
+    # Try #### format
+    m = re.search(r'####\s*([\-\d,\.]+)', text)
+    if m:
+        return m.group(1).replace(',', '').strip()
+    # Try "The answer is" format
+    m = re.search(r'[Tt]he answer is:?\s*([\-\d,\.]+)', text)
+    if m:
+        return m.group(1).replace(',', '').strip()
+    # Try boxed format with numeric answer
+    m = re.search(r'\\boxed\{([\-\d,\.]+)\}', text)
+    if m:
+        return m.group(1).replace(',', '').strip()
+    return None
+
+
 def clean_reasoning(text):
     text = re.sub(r'####.*$', '', text, flags=re.MULTILINE).strip()
     text = re.sub(r'[Tt]he answer is:?\s*[\-\d,\.]+\s*$', '', text).strip()
     text = re.sub(r'<<[^>]*>>', '', text)
+    text = re.sub(r'\\boxed\{[^}]*\}\s*$', '', text).strip()
     return text.strip()
-
-
-def normalize_answer(a):
-    """Normalize answer to clean integer/decimal string."""
-    a = a.replace(',', '').strip()
-    try:
-        val = float(a)
-        if val == int(val):
-            return str(int(val))
-        return a
-    except:
-        return a
 
 
 def format_fewshot(q, r, a):
@@ -62,7 +65,7 @@ def format_fewshot(q, r, a):
 
 def main():
     print("=" * 60)
-    print("Training v6: Fresh from base, proven data, optimized hyperparams")
+    print("Training v7: Optimized recipe with broader data")
     print("=" * 60)
     random.seed(42)
 
@@ -77,34 +80,50 @@ def main():
         a = extract_answer(ex["answer"])
         if a is None:
             continue
-        a = normalize_answer(a)
         r = clean_reasoning(ex["answer"])
-        if not r or len(r) < 10:
-            continue
         gsm8k_parsed.append({"question": ex["question"], "reasoning": r, "answer": a})
     print(f"GSM8K: {len(gsm8k_parsed)}")
 
-    # Parse MetaMathQA (AnsAug + Rephrased only)
+    # Parse MetaMathQA - GSM subsets (same as v4)
     mm = load_dataset("meta-math/MetaMathQA", split="train")
-    mm = mm.filter(lambda x: x["type"] in {"GSM_AnsAug", "GSM_Rephrased"}, num_proc=1)
-    mm_parsed = []
-    for ex in mm:
+    mm_gsm = mm.filter(lambda x: x["type"] in {"GSM_AnsAug", "GSM_Rephrased"}, num_proc=1)
+    mm_gsm_parsed = []
+    for ex in mm_gsm:
         a = extract_answer(ex["response"])
         if a is None:
             continue
-        a = normalize_answer(a)
         r = clean_reasoning(ex["response"])
         if not r or len(r) < 20:
             continue
-        mm_parsed.append({"question": ex["query"], "reasoning": r, "answer": a})
-    print(f"MetaMathQA AnsAug+Rephrased: {len(mm_parsed)}")
+        mm_gsm_parsed.append({"question": ex["query"], "reasoning": r, "answer": a})
+    print(f"MetaMathQA GSM subsets: {len(mm_gsm_parsed)}")
 
-    # Oversample GSM8K 3x within the dataset
-    all_data = gsm8k_parsed * 3 + mm_parsed
+    # Parse MetaMathQA - MATH_Rephrased (for more diversity)
+    mm_math = mm.filter(lambda x: x["type"] == "MATH_Rephrased", num_proc=1)
+    mm_math_parsed = []
+    for ex in mm_math:
+        a = extract_answer_math(ex["response"])
+        if a is None:
+            continue
+        # Only keep numeric answers (skip symbolic, fraction, etc.)
+        try:
+            float(a.replace(',', ''))
+        except ValueError:
+            continue
+        r = clean_reasoning(ex["response"])
+        if not r or len(r) < 20 or len(r) > 2000:
+            continue
+        mm_math_parsed.append({"question": ex["query"], "reasoning": r, "answer": a})
+    # Subsample to keep balance
+    random.shuffle(mm_math_parsed)
+    mm_math_parsed = mm_math_parsed[:30000]
+    print(f"MetaMathQA MATH_Rephrased (filtered, subsampled): {len(mm_math_parsed)}")
+
+    all_data = gsm8k_parsed + mm_gsm_parsed + mm_math_parsed
     random.shuffle(all_data)
-    print(f"Total data (GSM8K 3x + MetaMathQA): {len(all_data)}")
+    print(f"Total data: {len(all_data)}")
 
-    # Build training examples
+    # Build training examples (same format as v4)
     formatted = []
     for i, ex in enumerate(all_data):
         user_content = MATH_PROMPT_TEMPLATE.format(question=ex["question"])
@@ -117,7 +136,7 @@ def main():
                 {"role": "assistant", "content": assistant_content},
             ]
         else:
-            n_fs = random.randint(3, 6)
+            n_fs = random.randint(3, 8)
             fs = random.sample(gsm8k_parsed, min(n_fs, len(gsm8k_parsed)))
             sys_content = "\n\n".join([
                 format_fewshot(f["question"], f["reasoning"], f["answer"])
@@ -143,13 +162,12 @@ def main():
     model.config.use_cache = False
 
     n_gpus = torch.cuda.device_count()
-    per_device_bs = 8
-    grad_accum = 2
-    eff_bs = per_device_bs * grad_accum * n_gpus
+    per_device_bs = 4
+    grad_accum = 4
 
     training_args = SFTConfig(
-        output_dir="checkpoints_v6",
-        num_train_epochs=7,
+        output_dir="checkpoints_v7",
+        num_train_epochs=4,
         per_device_train_batch_size=per_device_bs,
         gradient_accumulation_steps=grad_accum,
         learning_rate=5e-5,
@@ -164,7 +182,7 @@ def main():
         seed=42,
         gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False},
-        dataloader_num_workers=16,
+        dataloader_num_workers=4,
         report_to="none",
         remove_unused_columns=True,
     )
@@ -176,7 +194,8 @@ def main():
         processing_class=tokenizer,
     )
 
-    print(f"\nStarting: 7 epochs, {len(dataset)} examples, {n_gpus} GPUs, eff_bs={eff_bs}")
+    eff_bs = per_device_bs * grad_accum * n_gpus
+    print(f"\nStarting: 4 epochs, {len(dataset)} examples, {n_gpus} GPUs, eff_bs={eff_bs}")
     trainer.train()
 
     local_rank = int(os.environ.get("LOCAL_RANK", 0))
@@ -201,12 +220,17 @@ def main():
         with open(gc_path, 'w') as f:
             json.dump(gc, f, indent=2)
 
+        # Remove stale index if present
+        idx_path = "final_model/model.safetensors.index.json"
+        if os.path.exists(idx_path):
+            os.remove(idx_path)
+
         m = AutoModelForCausalLM.from_pretrained("final_model")
         t = AutoTokenizer.from_pretrained("final_model")
         print(f"Verified: {type(m).__name__}, vocab={t.vocab_size}")
         del m, t
 
-    print("\nTraining v6 complete!")
+    print("\nTraining v7 complete!")
 
 
 if __name__ == "__main__":
