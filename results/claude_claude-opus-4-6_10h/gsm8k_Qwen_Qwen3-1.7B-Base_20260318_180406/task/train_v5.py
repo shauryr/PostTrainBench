@@ -176,8 +176,8 @@ def build_training_examples(all_data, gsm8k_parsed, use_fewshot_ratio=0.4):
                 {"role": "assistant", "content": assistant_content},
             ]
         else:
-            # Use 5-10 few-shot examples to match eval's 10
-            n_fs = random.randint(5, 10)
+            # Use 2-4 few-shot examples (keep sequences manageable)
+            n_fs = random.randint(2, 4)
             fs = random.sample(gsm8k_parsed, min(n_fs, len(gsm8k_parsed)))
             sys_content = "\n\n".join([
                 format_fewshot(f["question"], f["reasoning"], f["answer"])
@@ -239,7 +239,7 @@ def main():
     model.config.use_cache = False
 
     n_gpus = torch.cuda.device_count()
-    per_device_bs = 16
+    per_device_bs = 8
     grad_accum = 2
     eff_bs = per_device_bs * grad_accum * n_gpus
     print(f"GPUs: {n_gpus}, per_device_bs: {per_device_bs}, grad_accum: {grad_accum}, eff_bs: {eff_bs}")
@@ -257,9 +257,10 @@ def main():
         logging_steps=25,
         save_steps=500,
         save_total_limit=2,
-        max_length=1536,
+        max_length=1024,
         seed=42,
-        gradient_checkpointing=False,
+        gradient_checkpointing=True,
+        gradient_checkpointing_kwargs={"use_reentrant": False},
         dataloader_num_workers=16,
         report_to="none",
         remove_unused_columns=True,
