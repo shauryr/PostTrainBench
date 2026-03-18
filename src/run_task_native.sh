@@ -21,15 +21,20 @@ MODEL_TO_TRAIN="$3"
 CLUSTER_ID="$4"
 NUM_HOURS="$5"
 AGENT_CONFIG="$6"
-GPU_ID="${7:-0}"
+GPU_ID="${7:-all}"
 
 if ! [[ "$NUM_HOURS" =~ ^[0-9]+$ ]]; then
     echo "ERROR: NUM_HOURS must be a positive integer, got '$NUM_HOURS'" >&2
     exit 1
 fi
 
-# Restrict to a single GPU
-export CUDA_VISIBLE_DEVICES="$GPU_ID"
+# GPU visibility: "all" uses all GPUs, otherwise restrict to specified GPUs
+if [ "$GPU_ID" = "all" ]; then
+    # Don't set CUDA_VISIBLE_DEVICES — let agent see all GPUs
+    unset CUDA_VISIBLE_DEVICES 2>/dev/null || true
+else
+    export CUDA_VISIBLE_DEVICES="$GPU_ID"
+fi
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
@@ -226,7 +231,9 @@ run_evaluation_with_retry() {
 
         (
             source "${REPO_ROOT}/.venv/bin/activate"
-            export CUDA_VISIBLE_DEVICES="$GPU_ID"
+            # Use single GPU for eval (vLLM serves on 1 GPU)
+            export CUDA_VISIBLE_DEVICES="${GPU_ID%%,*}"
+            [ "$GPU_ID" = "all" ] && export CUDA_VISIBLE_DEVICES="0"
             cd "${REPO_ROOT}/src/eval/tasks/${EVALUATION_TASK}"
             timeout --signal=TERM --kill-after=60s 28800s \
                 python evaluate.py \

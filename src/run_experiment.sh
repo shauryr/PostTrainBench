@@ -20,7 +20,7 @@ AGENT="$2"
 MODEL_TO_TRAIN="$3"
 NUM_HOURS="$4"
 AGENT_CONFIG="$5"
-GPU_ID="${6:-0}"
+GPU_ID="${6:-all}"
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
@@ -78,7 +78,11 @@ cp results/.gitignore.exp results/.gitignore
 # --- Create experiment directory ---
 mkdir -p "$EXP_DIR"
 
-GPU_NAME="$(nvidia-smi --id=$GPU_ID --query-gpu=name --format=csv,noheader 2>/dev/null || echo unknown)"
+if [ "$GPU_ID" = "all" ]; then
+    GPU_NAME="$(nvidia-smi --id=0 --query-gpu=name --format=csv,noheader 2>/dev/null || echo unknown) x$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | wc -l)"
+else
+    GPU_NAME="$(nvidia-smi --id=$GPU_ID --query-gpu=name --format=csv,noheader 2>/dev/null || echo unknown)"
+fi
 cat > "${EXP_DIR}/config.json" <<CONF
 {
   "evaluation_task": "${EVALUATION_TASK}",
@@ -86,7 +90,7 @@ cat > "${EXP_DIR}/config.json" <<CONF
   "agent_config": "${AGENT_CONFIG}",
   "model_to_train": "${MODEL_TO_TRAIN}",
   "num_hours": ${NUM_HOURS},
-  "gpu_id": ${GPU_ID},
+  "gpu_id": "${GPU_ID}",
   "run_name": "${RUN_NAME}",
   "timestamp": "${TIMESTAMP}",
   "hostname": "$(hostname)",
