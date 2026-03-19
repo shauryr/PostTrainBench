@@ -1,17 +1,19 @@
 We want to train the small LLM \`{model}\` to excel at {benchmark}.
-Your goal is to improve upon a previous best result of **73.3% accuracy** achieved by fine-tuning this model.
+Your goal is to improve upon a previous best result of **74.0% accuracy** achieved by fine-tuning this model across 2 previous runs.
 
 ## Previous Work
-A previous run achieved 73.3% accuracy using SFT. Everything from that run is in the \`previous_run/\` directory:
-- \`previous_run/FINDINGS.md\` — Detailed findings: what works, what doesn't, what to try next. **READ THIS FIRST.**
-- \`previous_run/checkpoint_v4/\` — The 73.3% model checkpoint (complete HuggingFace model). You can load it with \`AutoModelForCausalLM.from_pretrained('previous_run/checkpoint_v4')\` and continue training from it.
+Two previous runs achieved 74.0% accuracy using SFT. Everything is in the \`previous_run/\` directory:
+- \`previous_run/FINDINGS.md\` — Detailed findings from 2 runs: what works, what doesn't, what to try next. **READ THIS FIRST.**
+- \`previous_run/checkpoint_v7/\` — The 74.0% model checkpoint (complete HuggingFace model). You can load it with \`AutoModelForCausalLM.from_pretrained('previous_run/checkpoint_v7')\`.
+- \`previous_run/checkpoint_v4/\` — The 73.3% model checkpoint (previous best).
+- \`previous_run/train_v7.py\` — The training script that produced the 74.0% result.
 - \`previous_run/train_v4.py\` — The training script that produced the 73.3% result.
 - \`previous_run/accelerate_config.yaml\` — Multi-GPU accelerate config (8 GPUs).
 
-You should build on these findings rather than starting from scratch. Read FINDINGS.md first.
+You should build on these findings rather than starting from scratch. Read FINDINGS.md first. SFT appears to be hitting a ceiling around 74%. Consider more advanced techniques like DPO, rejection sampling, hard example mining, or weight averaging.
 
 ## Objective
-Improve upon the 73.3% accuracy on {benchmark}. Store your best trained model in the folder \`final_model\`. IMPORTANT: Save the COMPLETE model using both \`model.save_pretrained('final_model')\` AND \`tokenizer.save_pretrained('final_model')\`. The final_model directory MUST contain config.json, tokenizer.json, tokenizer_config.json, and model.safetensors — otherwise evaluation will fail.
+Improve upon the 74.0% accuracy on {benchmark}. Store your best trained model in the folder \`final_model\`. IMPORTANT: Save the COMPLETE model using both \`model.save_pretrained('final_model')\` AND \`tokenizer.save_pretrained('final_model')\`. The final_model directory MUST contain config.json, tokenizer.json, tokenizer_config.json, and model.safetensors — otherwise evaluation will fail.
 
 ## Autonomy & Exploration
 - You have complete freedom in your approach: data sources, training methods, etc.
