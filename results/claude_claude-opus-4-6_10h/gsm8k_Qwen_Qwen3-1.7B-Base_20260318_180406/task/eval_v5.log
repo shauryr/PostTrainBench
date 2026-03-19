@@ -1,0 +1,32 @@
+Loading dataset openai/gsm8k from Hugging Face...
+Saving the dataset (0/1 shards):   0%|          | 0/7473 [00:00<?, ? examples/s]Saving the dataset (1/1 shards): 100%|██████████| 7473/7473 [00:00<00:00, 390273.48 examples/s]Saving the dataset (1/1 shards): 100%|██████████| 7473/7473 [00:00<00:00, 387705.29 examples/s]
+Loading dataset openai/gsm8k from Hugging Face...
+Saving the dataset (0/1 shards):   0%|          | 0/1319 [00:00<?, ? examples/s]Saving the dataset (1/1 shards): 100%|██████████| 1319/1319 [00:00<00:00, 170030.64 examples/s]Saving the dataset (1/1 shards): 100%|██████████| 1319/1319 [00:00<00:00, 167716.21 examples/s]
+---------------------------------------------------------                       
+gsm8k (150 samples): vllm/final_model                                           
+timeout: 18000000, attempt_timeout: 18000000, max_connections: 2, max_tokens:   
+4000, log_realtime: False, score_display: False, dataset: openai/gsm8k          
+---------------------------------------------------------                       
+                                                                                
+Steps:   1/150   0% | Samples:   1/150 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  22/150  14% | Samples:  22/150 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  46/150  30% | Samples:  46/150 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  72/150  48% | Samples:  72/150 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  94/150  62% | Samples:  94/150 | vllm:  0/ 2 | HTTP retries: 0
+Steps: 120/150  80% | Samples: 120/150 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 144/150  96% | Samples: 144/150 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 150/150 100% | Samples: 150/150 | vllm:  0/ 2 | HTTP retries: 0
+
+---------------------------------------------------------                       
+gsm8k (150 samples): vllm/final_model                                           
+timeout: 18000000, attempt_timeout: 18000000, max_connections: 2, max_tokens:   
+4000, log_realtime: False, score_display: False, dataset: openai/gsm8k          
+                                                                                
+total time:              0:01:26                                                
+vllm/final_model         352,701 tokens [I: 332,762, O: 19,939]                 
+match                                                                           
+accuracy  0.647                                                                 
+stderr    0.039                                                                 
+Log: logs/2026-03-18T19-31-33+00-00_gsm8k_mjZ7jg4GePjpmJw2msqVrx.json           
+---------------------------------------------------------                       
+                                                                                
