@@ -1,0 +1,87 @@
+Loading dataset openai/gsm8k from Hugging Face...
+Saving the dataset (0/1 shards):   0%|          | 0/7473 [00:00<?, ? examples/s]Saving the dataset (1/1 shards): 100%|██████████| 7473/7473 [00:00<00:00, 350486.79 examples/s]Saving the dataset (1/1 shards): 100%|██████████| 7473/7473 [00:00<00:00, 347248.45 examples/s]
+Loading dataset openai/gsm8k from Hugging Face...
+Saving the dataset (0/1 shards):   0%|          | 0/1319 [00:00<?, ? examples/s]Saving the dataset (1/1 shards): 100%|██████████| 1319/1319 [00:00<00:00, 161587.96 examples/s]Saving the dataset (1/1 shards): 100%|██████████| 1319/1319 [00:00<00:00, 158096.96 examples/s]
+---------------------------------------------------------                       
+gsm8k (1,319 samples):                                                          
+vllm//mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/results/claude_clau…
+timeout: 18000000, attempt_timeout: 18000000, max_connections: 2, max_tokens:   
+4000, log_realtime: False, log_buffer: 131, score_display: False, dataset:      
+openai/gsm8k                                                                    
+---------------------------------------------------------                       
+                                                                                
+Steps:   1/1319   0% | Samples:   1/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  22/1319   1% | Samples:  22/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  46/1319   3% | Samples:  46/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  72/1319   5% | Samples:  72/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps:  98/1319   7% | Samples:  98/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 121/1319   9% | Samples: 121/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 147/1319  11% | Samples: 147/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 169/1319  12% | Samples: 169/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 191/1319  14% | Samples: 191/1319 | vllm:  0/ 2 | HTTP retries: 0
+Steps: 214/1319  16% | Samples: 214/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 239/1319  18% | Samples: 239/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 264/1319  20% | Samples: 264/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 287/1319  21% | Samples: 287/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 308/1319  23% | Samples: 308/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 331/1319  25% | Samples: 331/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 353/1319  26% | Samples: 353/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 377/1319  28% | Samples: 377/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 403/1319  30% | Samples: 403/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 422/1319  31% | Samples: 422/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 443/1319  33% | Samples: 443/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 468/1319  35% | Samples: 468/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 495/1319  37% | Samples: 495/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 519/1319  39% | Samples: 519/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 544/1319  41% | Samples: 543/1319 | vllm:  0/ 2 | HTTP retries: 0
+Steps: 569/1319  43% | Samples: 569/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 588/1319  44% | Samples: 588/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 612/1319  46% | Samples: 612/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 639/1319  48% | Samples: 639/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 660/1319  50% | Samples: 660/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 688/1319  52% | Samples: 688/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 710/1319  53% | Samples: 710/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 734/1319  55% | Samples: 734/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 758/1319  57% | Samples: 758/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 782/1319  59% | Samples: 782/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 803/1319  60% | Samples: 803/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 827/1319  62% | Samples: 827/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 848/1319  64% | Samples: 848/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 871/1319  66% | Samples: 871/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 895/1319  67% | Samples: 895/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 921/1319  69% | Samples: 921/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 939/1319  71% | Samples: 939/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 967/1319  73% | Samples: 966/1319 | vllm:  0/ 2 | HTTP retries: 0
+Steps: 991/1319  75% | Samples: 991/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1011/1319  76% | Samples: 1011/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1030/1319  78% | Samples: 1030/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1050/1319  79% | Samples: 1050/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1076/1319  81% | Samples: 1076/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1099/1319  83% | Samples: 1099/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1123/1319  85% | Samples: 1123/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1149/1319  87% | Samples: 1148/1319 | vllm:  0/ 2 | HTTP retries: 0
+Steps: 1172/1319  88% | Samples: 1172/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1192/1319  90% | Samples: 1192/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1216/1319  92% | Samples: 1216/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1240/1319  94% | Samples: 1240/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1264/1319  95% | Samples: 1264/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1287/1319  97% | Samples: 1287/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1311/1319  99% | Samples: 1311/1319 | vllm:  1/ 2 | HTTP retries: 0
+Steps: 1319/1319 100% | Samples: 1319/1319 | vllm:  0/ 2 | HTTP retries: 0
+
+---------------------------------------------------------                       
+gsm8k (1,319 samples):                                                          
+vllm//mnt/weka/home/shaurya.rohatgi/projects/PostTrainBench/results/claude_clau…
+timeout: 18000000, attempt_timeout: 18000000, max_connections: 2, max_tokens:   
+4000, log_realtime: False, log_buffer: 131, score_display: False, dataset:      
+openai/gsm8k                                                                    
+                                                                                
+total time:                               0:06:13                               
+vllm//mnt/weka/home/shaurya.rohatgi/pro…  3,104,907 tokens [I: 2,927,267, O:    
+                                        177,640]                                
+match                                                                           
+accuracy  0.704                                                                 
+stderr    0.013                                                                 
+Log: logs/2026-03-19T03-49-27+00-00_gsm8k_6TbYo5BcM3adm67RiW83iN.json           
+---------------------------------------------------------                       
+                                                                                

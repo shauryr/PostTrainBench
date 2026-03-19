@@ -1,0 +1,52 @@
+We want to train the small LLM \`Qwen/Qwen3-1.7B-Base\` to excel at GSM8K (Grade School Math 8K).
+Your goal is to improve upon a previous best result of **73.3% accuracy** achieved by fine-tuning this model.
+
+## Previous Work
+A previous run achieved 73.3% accuracy using SFT. Everything from that run is in the \`previous_run/\` directory:
+- \`previous_run/FINDINGS.md\` — Detailed findings: what works, what doesn't, what to try next. **READ THIS FIRST.**
+- \`previous_run/checkpoint_v4/\` — The 73.3% model checkpoint (complete HuggingFace model). You can load it with \`AutoModelForCausalLM.from_pretrained('previous_run/checkpoint_v4')\` and continue training from it.
+- \`previous_run/train_v4.py\` — The training script that produced the 73.3% result.
+- \`previous_run/accelerate_config.yaml\` — Multi-GPU accelerate config (8 GPUs).
+
+You should build on these findings rather than starting from scratch. Read FINDINGS.md first.
+
+## Objective
+Improve upon the 73.3% accuracy on GSM8K (Grade School Math 8K). Store your best trained model in the folder \`final_model\`. IMPORTANT: Save the COMPLETE model using both \`model.save_pretrained('final_model')\` AND \`tokenizer.save_pretrained('final_model')\`. The final_model directory MUST contain config.json, tokenizer.json, tokenizer_config.json, and model.safetensors — otherwise evaluation will fail.
+
+## Autonomy & Exploration
+- You have complete freedom in your approach: data sources, training methods, etc.
+- You can do multiple iterations on the model and your approach.
+- Internet access is unrestricted.
+- You can either continue training from the v4 checkpoint or train from the base model with improved data/methods.
+
+## Information on the Setup
+- The environment is fully set up with a Python virtual environment. All required packages are already installed: transformers, datasets, trl, peft, accelerate, bitsandbytes, vllm, flash_attn, inspect-ai, etc. Do NOT install packages — they are already available. Just use \`python3\` directly.
+- The machine is equipped with 8x NVIDIA H200 GPUs (140GB VRAM EACH, 1.12TB total). USE THIS CAPACITY:
+  - The model is only 3.4GB in bf16. You have 140GB per GPU — use batch_size 32+ per GPU.
+  - Disable gradient_checkpointing (you have plenty of VRAM).
+  - This will dramatically speed up training and allow more iterations.
+- Consider the --limit option of the evaluate.py script for faster iteration during development.
+- The evaluate.py script uses vLLM to load and serve your model. Your final_model/ must be a complete HuggingFace model directory (config.json + tokenizer + weights). Always verify with: \`python3 -c "from transformers import AutoModelForCausalLM, AutoTokenizer; m=AutoModelForCausalLM.from_pretrained('final_model'); t=AutoTokenizer.from_pretrained('final_model'); print('OK')"\`
+- When using datasets.map() with num_proc, set num_proc=1 to avoid multiprocessing issues, or use batched=True instead.
+- A final note: the evaluate.py script sometimes outputs ERROR warnings. Do not be alarmed by this, this is normal behavior for inspect-ai. Also if you run into issues with the evaluate.py script, this is likely due to memory constraints on the GPU. In this case please decrease --max-connections or --max-tokens.
+
+## Version Control
+You are working inside a git repository on an experiment branch. **Commit your work frequently** so progress is tracked:
+- After writing a training script: \`git add -A && git commit -m "Add training script: <brief description>"\`
+- After a training run completes: \`git add -A && git commit -m "Training complete: <results summary>"\`
+- After evaluation: \`git add -A && git commit -m "Evaluation: <score>"\`
+- Before starting a new approach: \`git add -A && git commit -m "Pivot: <reason>"\`
+Do NOT commit the model weights (final_model/) or large binary files — only scripts, configs, and logs.
+Add a .gitignore with: \`echo -e "final_model/\n*.pt\n*.bin\n*.safetensors\n__pycache__/" > .gitignore\` before your first commit.
+
+## Rules
+1. There will be no user interaction. You have to operate autonomously.
+2. You have a maximum of 10 hours. You can query how much time you have left by calling \`bash timer.sh\` in the current directory.
+3. Do not use GSM8K (Grade School Math 8K) test data for training (neither questions, nor answers). Otherwise we will have data contamination.
+4. Do not modify evaluate.py or templates/ .
+5. Work only in the current directory and subdirectories. You can of course make use of the huggingface cache, which is not located here, but in the home folder.
+6. Your final_model must run in the current environment (same packages). Do not install additional packages.
+7. You are not allowed to fine-tune any model other than \`Qwen/Qwen3-1.7B-Base\`. This means that it is forbidden to download an instruction tuned version of \`Qwen/Qwen3-1.7B-Base\`. Only fine-tune from \`Qwen/Qwen3-1.7B-Base\` and submit one of your fine-tuned versions as your final_model.
+
+Remember: NEVER ask the user for feedback. Just execute actions which make most sense to you. We will evaluate your results on GSM8K (Grade School Math 8K) once you are done.
+You are running in a non-interactive mode. So make sure every process you are running finishes before you write your last message.
